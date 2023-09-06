@@ -4,9 +4,9 @@ To easily use Bytewax on Pulsar you can take advantage of the kafka protocol ada
 
 To get this running on your local machine, follow the commands below.
 
-Install necessary libraries:
+Install the bytewax library with kafka connector:
 ```
-pip install bytewax==0.17 kafka-python tqdm
+pip install bytewax[kafka]==0.17 tqdm
 ```
 
 Spin up the Apache Pulsar container

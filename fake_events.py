@@ -1,16 +1,14 @@
 import json
 import random
-from time import sleep
+import socket
+import time
+
+from confluent_kafka import Producer
 from tqdm import tqdm
 
-from kafka import KafkaProducer
-from kafka.errors import KafkaError
 
 NUM_EVENTS = 500
-
-input_topic_name = 'web_events'
-localhost_bootstrap_server = 'localhost:19092'
-producer = KafkaProducer(bootstrap_servers=[localhost_bootstrap_server])
+SLEEP_BETWEEN_MESSAGES = 0.01
 
 # Add data to input topic
 users = [
@@ -21,13 +19,25 @@ users = [
     {'user_id': 'a99', 'email': 'employee@bytewax.io'},
 ]
 event_types = ['click', 'post', 'comment', 'login']
-try:
-    for _ in tqdm(range(NUM_EVENTS)):
+
+# setup producer, see
+# https://docs.confluent.io/kafka-clients/python/current/overview.html
+TOPIC = 'web_events'
+BROKER = 'localhost:19092'
+conf = {
+    'bootstrap.servers': BROKER,
+    'client.id': socket.gethostname(),
+}
+producer = Producer(conf)
+
+
+if __name__ == '__main__':
+    for msg_id in tqdm(range(NUM_EVENTS)):
         event = random.choice(users)
+        event['msg_id'] = msg_id
         event['type'] = random.choice(event_types)
-        event_ = json.dumps(event).encode()
-        producer.send(input_topic_name, value=event_)
-        sleep(0.1)
-    print(f'input topic "{input_topic_name}" populated successfully with {NUM_EVENTS} sample events')
-except KafkaError:
-    print('A kafka error occurred')
+        producer.produce(
+            TOPIC,
+            value=json.dumps(event).encode(),
+        )
+        time.sleep(SLEEP_BETWEEN_MESSAGES)
